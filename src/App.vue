@@ -1,26 +1,49 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div class="container main-container">
+        <div class="row g-4">
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <side-bar></side-bar>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <header-bar></header-bar>
+                <main-content></main-content>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import SideBar from './components/SideBar.vue';
+import HeaderBar from './components/HeaderBar.vue';
+import MainContent from './components/MainContent.vue';
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    SideBar,
+    HeaderBar,
+    MainContent
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+  :root {
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      --danger-gradient: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+      --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+        
+  body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
 </style>
