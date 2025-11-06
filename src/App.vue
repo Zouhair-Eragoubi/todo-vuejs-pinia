@@ -15,21 +15,24 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import SideBar from './components/SideBar.vue';
 import HeaderBar from './components/HeaderBar.vue';
 import MainContent from './components/MainContent.vue';
+import { useTodosStore } from './stores/TodosStore';
 
-export default {
-  name: 'App',
-  components: {
-    SideBar,
-    HeaderBar,
-    MainContent
-  }
-}
+import { onMounted } from 'vue';
+
+const todosStore = useTodosStore(); 
+
+onMounted(() => {
+  todosStore.loadCategories();
+  todosStore.loadTodos();
+});
+
+
 </script>
 
 <style>

@@ -17,7 +17,7 @@ const props = defineProps({
   title: String,
   icon: String,
   category: {
-    type: String,
+    type: Number,
     required: false,
     default: undefined
   },

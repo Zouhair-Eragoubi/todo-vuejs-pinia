@@ -3,11 +3,8 @@
         <category-title title="All Tasks" icon="fas fa-inbox"></category-title>
 
         <category-item title="All Tasks" icon="fas fa-inbox" ></category-item>
-        <category-item title="Work" icon="briefcase" category="work"></category-item>
-        <category-item title="Personal" icon="user" category="personal"></category-item>
-        <category-item title="Shopping" icon="shopping-cart" category="shopping"></category-item>
-        <category-item title="Health" icon="heartbeat" category="health"></category-item>
-
+        <category-item v-for=" category in categories" :key="category.id" :title="category.name" icon="briefcase" :category="category.id"></category-item>
+    
         <hr>
 
         <category-title title="Progress" icon="fas fa-chart-pie"></category-title>
@@ -19,6 +16,12 @@
 import CategoryItem from './CategoryItem.vue'
 import CategoryTitle from './CategoryTitle.vue';
 import ChartComp from './ChartComp.vue'
+import { useTodosStore } from '../stores/TodosStore';
+import { computed } from 'vue';
+
+const todosStore = useTodosStore();
+
+const categories = computed(() => todosStore.allCategories);
 </script>
 
 <style>

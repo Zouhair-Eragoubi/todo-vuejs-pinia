@@ -1,53 +1,20 @@
 import { defineStore } from 'pinia'
 export const useTodosStore = defineStore('todos', {
   state: () => ({
-    todos: [
-            {
-                id: 1,
-                name: 'Complete project proposal',
-                desc: 'Finish the Q4 project proposal and send to stakeholders',
-                category: 'work',
-                priority: 'high',
-                dueDate: '2025-10-15',
-                tags: ['urgent', 'meeting'],
-                completed: false,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 2,
-                name: 'Gym session',
-                desc: 'Leg day workout',
-                category: 'health',
-                priority: 'medium',
-                dueDate: '2025-10-09',
-                tags: ['fitness'],
-                completed: false,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 3,
-                name: 'Buy groceries',
-                desc: 'Milk, eggs, bread, vegetables',
-                category: 'shopping',
-                priority: 'low',
-                dueDate: '2025-10-10',
-                tags: ['shopping', 'weekly'],
-                completed: true,
-                createdAt: new Date().toISOString()
-            }
-        ]
-        ,
+    todos: [],
+    categories: [],
     currentCategory: undefined,
     completed: undefined,
     priority: undefined,
     sortBy: 'date',
-    searchQuery: ''
+    searchQuery: '',
+    errors:[]
   }),
   getters: {
     allTodos: (state) => {
       let filteredTodos = state.todos.filter(todo => {
         const categoryMatch = state.currentCategory === undefined || 
-          todo.category.toLowerCase() === state.currentCategory.toLowerCase();
+          todo.category_id === state.currentCategory;
         const completionMatch = state.completed === undefined || 
           todo.completed === state.completed;
         const priorityMatch = state.priority === undefined || 
@@ -76,6 +43,9 @@ export const useTodosStore = defineStore('todos', {
 
       return filteredTodos;
     },
+    allCategories: (state) => {
+      return state.categories;
+    },
     currentCategoryCount: (state) => {
       return state.todos.length;
     },
@@ -84,7 +54,8 @@ export const useTodosStore = defineStore('todos', {
       if (category === undefined) {
         return state.todos.length;
       }
-      return state.todos.filter(todo => todo.category.toLocaleLowerCase() === category.toLocaleLowerCase()).length;
+      console.log('Filtered todos for category 11 : ',category, state.todos.filter(todo => todo.category_id == category));
+      return state.todos.filter(todo => todo.category_id == category).length;
     },
     getCompletedTodosCount: (state) => (completed) => {
       if (completed === undefined) {
@@ -103,8 +74,28 @@ export const useTodosStore = defineStore('todos', {
     }
   },
   actions: {
-    addTodo(todo) {
-      this.todos.push(todo);
+    async addTodo(todo) {
+        const response = await fetch('http://localhost:8000/api/todos/create', {  
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(todo)
+        });
+        const data = await response.json();
+        console.log('Add todo response data:', data);
+        console.log("error : ",data.errors);
+        if(data.errors){
+          console.error('Error adding todo:', data.errors);
+          this.errors = data.errors;
+          return;
+        }
+        console.log('Added todo response:', data);
+
+        // Push the response data (which includes the ID from the database)
+        this.todos.push(data.todo);
+        this.errors = [];
     },
     setCategoryFilter(category) {
       this.currentCategory = category;
@@ -124,8 +115,21 @@ export const useTodosStore = defineStore('todos', {
     removeTodo(todo) {
       this.todos = this.todos.filter(t => t !== todo);
     },
-    toggleTodoCompletion(todoId) {
+    async toggleTodoCompletion(todoId) {
       const id = typeof todoId === 'string' ? Number(todoId) : todoId;
+      const response = await fetch(`http://localhost:8000/api/todos/toggle-completion/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      const data = await response.json();
+      if(data.error){
+        console.error('Error toggling todo completion:', data.error);
+        return;
+      }
+
       const todos = this.todos.map(t => {
         if (t.id === id) {
           return { ...t, completed: !t.completed , updatedAt: new Date().toISOString() };
@@ -141,6 +145,22 @@ export const useTodosStore = defineStore('todos', {
     resetFilters() {
       this.completed = undefined;
       this.priority = undefined;
+    },
+    async loadTodos() {
+      const response = await fetch('http://127.0.0.1:8000/api/todos',
+        { method: 'GET' }
+      );
+      const data = await response.json();
+      console.log('Fetched todos:', data);
+      this.todos = data.todos;
+    },
+    async loadCategories() {
+      const response = await fetch('http://127.0.0.1:8000/api/categories',
+        { method: 'GET' }
+      );
+      const data = await response.json();
+      console.log('Fetched cat:', data);
+      this.categories = data.categories;
     }
   }
 });

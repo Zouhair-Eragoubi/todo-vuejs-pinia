@@ -26,22 +26,29 @@
                     <div class="mb-3">
                         <label class="form-label">Task Name *</label>
                         <input type="text" class="form-control" v-model="newTask.name" placeholder="Enter task name">
+                        <p v-if="errors && errors.name" class="text-danger mt-2">
+                            {{ Array.isArray(errors.name) ? errors.name[0] : errors.name }}
+                        </p>
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" v-model="newTask.description" rows="3" placeholder="Add details..."></textarea>
+                        <textarea class="form-control" v-model="newTask.desc" rows="3" placeholder="Add details..."></textarea>
+                        <p v-if="errors && errors.desc" class="text-danger mt-2">
+                            {{ Array.isArray(errors.desc) ? errors.desc[0] : errors.desc }}
+                        </p>
                     </div>
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Category *</label>
-                            <select class="form-select" v-model="newTask.category">
-                                <option value="work">Work</option>
-                                <option value="personal">Personal</option>
-                                <option value="shopping">Shopping</option>
-                                <option value="health">Health</option>
+                            <select class="form-select" v-model="newTask.category_id">
+                                <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
                             </select>
+                            <p v-if="errors && errors.category_id" class="text-danger mt-2">
+                                {{ Array.isArray(errors.category_id) ? errors.category_id[0] : errors.category_id }}
+                            </p>
+                            
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Priority *</label>
@@ -50,17 +57,26 @@
                                 <option value="medium">Medium</option>
                                 <option value="high">High</option>
                             </select>
+                            <p v-if="errors && errors.priority" class="text-danger mt-2">
+                                {{ Array.isArray(errors.priority) ? errors.priority[0] : errors.priority }}
+                            </p>
                         </div>
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label">Due Date</label>
-                        <input type="date" class="form-control" v-model="newTask.dueDate">
+                        <input type="date" class="form-control" v-model="newTask.due_date">
+                        <p v-if="errors && errors.due_date" class="text-danger mt-2">
+                            {{ Array.isArray(errors.due_date) ? errors.due_date[0] : errors.due_date }}
+                        </p>
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label">Tags (comma separated)</label>
                         <input type="text" class="form-control" v-model="newTask.tags" placeholder="e.g., urgent, meeting, report">
+                        <p v-if="errors && errors.tags" class="text-danger mt-2">
+                            {{ Array.isArray(errors.tags) ? errors.tags[0] : errors.tags }}
+                        </p>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -79,27 +95,31 @@
 <script setup>
 import { ref, reactive } from 'vue';
 import { useTodosStore } from '../stores/TodosStore';
+import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
 
 const todosStore = useTodosStore();
+const { errors } = storeToRefs(useTodosStore());
+const categories = computed(() => todosStore.allCategories);
 
 const modalRef = ref(null)
 const showModal = ref(false)
 const newTask = reactive({
   name: '',
-  description: '',
-  category: 'work',
-  priority: 'medium',
-  dueDate: '',
+  desc: '',
+  category_id: '',
+  priority: '',
+  due_date: '',
   tags: ''
 })
 
 
 function resetForm() {
   newTask.name = ''
-  newTask.description = ''
-  newTask.category = 'work'
-  newTask.priority = 'medium'
-  newTask.dueDate = ''
+  newTask.desc = ''
+  newTask.category_id = ''
+  newTask.priority = ''
+  newTask.due_date = ''
   newTask.tags = ''
 }
 
@@ -109,21 +129,20 @@ function openOrCloseModal() {
 }
 
 function addTask() {
-  if (!newTask.name.trim()) {
-    alert('Task name is required.')
-    return
-  }
   const taskToAdd = {
-    name: newTask.name,
-    description: newTask.description,
-    category: newTask.category,
-    priority: newTask.priority,
-    dueDate: newTask.dueDate,
-    tags: newTask.tags ? newTask.tags.split(',').map(t => t.trim()).filter(Boolean) : []
-  }
-  console.log('Adding task:', taskToAdd);
-  todosStore.addTodo(taskToAdd);
-  openOrCloseModal()
+        name: newTask.name,
+        desc: newTask.desc,
+        category_id: newTask.category_id,
+        priority: newTask.priority,
+        due_date: newTask.due_date,
+        tags: newTask.tags ? JSON.stringify(newTask.tags.split(',').map(t => t.trim()).filter(Boolean)) : '[]'
+    }
+    console.log('Adding task:', taskToAdd);
+    todosStore.addTodo(taskToAdd);
+    if(!errors){
+        openOrCloseModal();
+    }
+  
 }
 </script>
 

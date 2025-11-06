@@ -11,7 +11,7 @@
                                 <i class="fas fa-flag me-1"></i>{{task.priority.toUpperCase()}}
                             </span>
                             <span class="category-badge" style="background: #e9ecef; color: #495057;">
-                                <i class="fas fa-folder me-1"></i>{{task.category.toUpperCase()}}
+                                <i class="fas fa-folder me-1"></i>{{task.category_id}}
                             </span>
                         </div>
                         <div class="btn-group btn-group-sm">
@@ -27,12 +27,12 @@
                     <p class="text-muted mb-2 small">{{task.desc}}</p>
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="tag" v-for="tag in task.tags" :key="tag">{{tag}}</span>
+                            <span class="tag" v-for="t in JSON.parse(task.tags)" :key="t">{{t}}</span>
                         </div>
                     
-                        <small class="due-date ${isOverdue ? 'overdue' : ''}">
+                        <small class="due-date" :class="{ 'overdue': isOverdue }">
                             <i class="fas fa-calendar me-1"></i>
-                            {{isOverdue ? 'OVERDUE: ' : ''}} {{formatDate(task.dueDate)}}
+                            {{isOverdue ? 'OVERDUE: ' : ''}} {{formatDate(task.due_date)}}
                         </small>
                         
                     </div>
@@ -48,12 +48,15 @@ import { useTodosStore } from '@/stores/TodosStore';
 
 const todosStore = useTodosStore();
 
- defineProps({
+const props = defineProps({
   task: {
     type: Object,
     required: true
   }
-})
+});
+
+const isOverdue = props.task.due_date && new Date(props.task.due_date) < new Date() && !props.task.completed;   
+console.log('TodoItem props:', props);
 
 // function getPriorityClass(priority) {
 //   return {
@@ -64,6 +67,7 @@ const todosStore = useTodosStore();
 // }
 
 function formatDate(dateString) {
+    console.log(dateString);
   if (!dateString) return ''
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
