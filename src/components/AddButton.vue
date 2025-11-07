@@ -80,11 +80,17 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @click="openOrCloseModal">
+                    <button type="button" class="btn btn-secondary" @click="openOrCloseModal" :disabled="loading">
                         <i class="fas fa-times me-2"></i>Cancel
                     </button>
-                    <button type="button" class="btn btn-primary" @click="addTask">
-                        <i class="fas fa-plus me-2"></i>Add Task
+                    <button type="button" class="btn btn-primary" @click="addTask" :disabled="loading">
+                        <span v-if="loading">
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Adding...
+                        </span>
+                        <span v-else>
+                            <i class="fas fa-plus me-2"></i>Add Task
+                        </span>
                     </button>
                 </div>
             </div>
@@ -99,7 +105,7 @@ import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 
 const todosStore = useTodosStore();
-const { errors } = storeToRefs(useTodosStore());
+const { errors, loading } = storeToRefs(todosStore);
 const categories = computed(() => todosStore.allCategories);
 
 const modalRef = ref(null)
@@ -128,21 +134,21 @@ function openOrCloseModal() {
   if (!showModal.value) resetForm()
 }
 
-function addTask() {
+async function addTask() {
   const taskToAdd = {
-        name: newTask.name,
-        desc: newTask.desc,
-        category_id: newTask.category_id,
-        priority: newTask.priority,
-        due_date: newTask.due_date,
-        tags: newTask.tags ? JSON.stringify(newTask.tags.split(',').map(t => t.trim()).filter(Boolean)) : '[]'
-    }
-    console.log('Adding task:', taskToAdd);
-    todosStore.addTodo(taskToAdd);
-    if(!errors){
-        openOrCloseModal();
-    }
-  
+    name: newTask.name,
+    desc: newTask.desc,
+    category_id: newTask.category_id,
+    priority: newTask.priority,
+    due_date: newTask.due_date,
+    tags: newTask.tags ? JSON.stringify(newTask.tags.split(',').map(t => t.trim()).filter(Boolean)) : '[]'
+  }
+
+  const success = await todosStore.addTodo(taskToAdd);
+
+  if (success) {
+    openOrCloseModal();
+  }
 }
 </script>
 

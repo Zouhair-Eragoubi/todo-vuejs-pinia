@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+const apiUrl = process.env.VUE_APP_API_URL;
 export const useTodosStore = defineStore('todos', {
   state: () => ({
     todos: [],
@@ -8,7 +9,9 @@ export const useTodosStore = defineStore('todos', {
     priority: undefined,
     sortBy: 'date',
     searchQuery: '',
-    errors:[]
+    errors: [],
+    loading: false,
+    errorMessage: ''
   }),
   getters: {
     allTodos: (state) => {
@@ -50,11 +53,9 @@ export const useTodosStore = defineStore('todos', {
       return state.todos.length;
     },
     getCategoryTodosCount: (state) => (category) => {
-      console.log('Getting todos count for category:', category, state.todos);
       if (category === undefined) {
         return state.todos.length;
       }
-      console.log('Filtered todos for category 11 : ',category, state.todos.filter(todo => todo.category_id == category));
       return state.todos.filter(todo => todo.category_id == category).length;
     },
     getCompletedTodosCount: (state) => (completed) => {
@@ -75,7 +76,11 @@ export const useTodosStore = defineStore('todos', {
   },
   actions: {
     async addTodo(todo) {
-        const response = await fetch('http://localhost:8000/api/todos/create', {  
+      try {
+        this.loading = true;
+        this.errorMessage = '';
+
+        const response = await fetch(`${apiUrl}todos/create`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -83,19 +88,28 @@ export const useTodosStore = defineStore('todos', {
           },
           body: JSON.stringify(todo)
         });
-        const data = await response.json();
-        console.log('Add todo response data:', data);
-        console.log("error : ",data.errors);
-        if(data.errors){
-          console.error('Error adding todo:', data.errors);
-          this.errors = data.errors;
-          return;
-        }
-        console.log('Added todo response:', data);
 
-        // Push the response data (which includes the ID from the database)
+        const data = await response.json();
+
+        if (data.errors) {
+          this.errors = data.errors;
+          this.errorMessage = 'Failed to create task. Please check all fields.';
+          return false;
+        }
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to create task');
+        }
+
         this.todos.push(data.todo);
         this.errors = [];
+        return true;
+      } catch (error) {
+        this.errorMessage = error.message || 'Network error. Please try again.';
+        return false;
+      } finally {
+        this.loading = false;
+      }
     },
     setCategoryFilter(category) {
       this.currentCategory = category;
@@ -116,51 +130,108 @@ export const useTodosStore = defineStore('todos', {
       this.todos = this.todos.filter(t => t !== todo);
     },
     async toggleTodoCompletion(todoId) {
-      const id = typeof todoId === 'string' ? Number(todoId) : todoId;
-      const response = await fetch(`http://localhost:8000/api/todos/toggle-completion/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      const data = await response.json();
-      if(data.error){
-        console.error('Error toggling todo completion:', data.error);
-        return;
-      }
+      try {
+        const id = typeof todoId === 'string' ? Number(todoId) : todoId;
 
-      const todos = this.todos.map(t => {
-        if (t.id === id) {
-          return { ...t, completed: !t.completed , updatedAt: new Date().toISOString() };
+        const response = await fetch(`${apiUrl}todos/toggle-completion/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.error || !response.ok) {
+          throw new Error(data.error || 'Failed to toggle task completion');
         }
-        return t;
-      });
-      console.log('Toggled completion for todo ID:', todos);
-      this.todos = todos;
+
+        this.todos = this.todos.map(t => {
+          if (t.id === id) {
+            return { ...t, completed: !t.completed, updatedAt: new Date().toISOString() };
+          }
+          return t;
+        });
+
+        return true;
+      } catch (error) {
+        this.errorMessage = error.message || 'Failed to update task';
+        return false;
+      }
     },
-    deleteTodo(todoId) {
-      this.todos = this.todos.filter(t => t.id !== todoId);
+    async deleteTodo(todoId) {
+      try {
+        const response = await fetch(`${apiUrl}todos/${todoId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || 'Failed to delete task');
+        }
+
+        this.todos = this.todos.filter(t => t.id !== todoId);
+        return true;
+      } catch (error) {
+        this.errorMessage = error.message || 'Failed to delete task';
+        return false;
+      }
     },
     resetFilters() {
       this.completed = undefined;
       this.priority = undefined;
     },
     async loadTodos() {
-      const response = await fetch('http://127.0.0.1:8000/api/todos',
-        { method: 'GET' }
-      );
-      const data = await response.json();
-      console.log('Fetched todos:', data);
-      this.todos = data.todos;
+      try {
+        this.loading = true;
+        this.errorMessage = '';
+
+        const response = await fetch(`${apiUrl}todos`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load tasks');
+        }
+
+        const data = await response.json();
+        this.todos = data.todos;
+        return true;
+      } catch (error) {
+        this.errorMessage = error.message || 'Failed to load tasks';
+        return false;
+      } finally {
+        this.loading = false;
+      }
     },
     async loadCategories() {
-      const response = await fetch('http://127.0.0.1:8000/api/categories',
-        { method: 'GET' }
-      );
-      const data = await response.json();
-      console.log('Fetched cat:', data);
-      this.categories = data.categories;
+      try {
+        const response = await fetch(`${apiUrl}categories`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load categories');
+        }
+
+        const data = await response.json();
+        this.categories = data.categories;
+        return true;
+      } catch (error) {
+        this.errorMessage = error.message || 'Failed to load categories';
+        return false;
+      }
     }
   }
 });

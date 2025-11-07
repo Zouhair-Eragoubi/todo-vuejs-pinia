@@ -27,7 +27,7 @@
                     <p class="text-muted mb-2 small">{{task.desc}}</p>
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="tag" v-for="t in JSON.parse(task.tags)" :key="t">{{t}}</span>
+                            <span class="tag" v-for="t in parseTags(task.tags)" :key="t">{{t}}</span>
                         </div>
                     
                         <small class="due-date" :class="{ 'overdue': isOverdue }">
@@ -55,8 +55,7 @@ const props = defineProps({
   }
 });
 
-const isOverdue = props.task.due_date && new Date(props.task.due_date) < new Date() && !props.task.completed;   
-console.log('TodoItem props:', props);
+const isOverdue = props.task.due_date && new Date(props.task.due_date) < new Date() && !props.task.completed;
 
 // function getPriorityClass(priority) {
 //   return {
@@ -66,8 +65,17 @@ console.log('TodoItem props:', props);
 //   }
 // }
 
+function parseTags(tagsString) {
+  if (!tagsString) return []
+  try {
+    const tags = JSON.parse(tagsString)
+    return Array.isArray(tags) ? tags : []
+  } catch (error) {
+    return []
+  }
+}
+
 function formatDate(dateString) {
-    console.log(dateString);
   if (!dateString) return ''
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -78,6 +86,11 @@ function formatDate(dateString) {
 
 function toggleComplete(taskId) {
     todosStore.toggleTodoCompletion(taskId)
+}
+
+function editTask(taskId) {
+  // TODO: Implement edit functionality with modal
+  alert('Edit feature coming soon! Task ID: ' + taskId)
 }
 
 function deleteTask(taskId) {
