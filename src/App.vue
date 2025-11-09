@@ -1,51 +1,12 @@
 <template>
-  <div class="container main-container">
-        <!-- Error Alert -->
-        <div v-if="errorMessage" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            <strong>Error:</strong> {{ errorMessage }}
-            <button type="button" class="btn-close" @click="clearError" aria-label="Close"></button>
-        </div>
-
-        <div class="row g-4">
-            <!-- Sidebar -->
-            <div class="col-lg-3">
-                <side-bar></side-bar>
-            </div>
-
-            <!-- Main Content -->
-            <div class="col-lg-9">
-                <header-bar></header-bar>
-                <main-content></main-content>
-            </div>
-        </div>
-    </div>
+  <div>
+    <router-view></router-view>
+  </div>
 </template>
 
 <script setup>
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import SideBar from './components/SideBar.vue';
-import HeaderBar from './components/HeaderBar.vue';
-import MainContent from './components/MainContent.vue';
-import { useTodosStore } from './stores/TodosStore';
-import { storeToRefs } from 'pinia';
-
-import { onMounted } from 'vue';
-
-const todosStore = useTodosStore();
-const { errorMessage } = storeToRefs(todosStore);
-
-onMounted(() => {
-  todosStore.loadCategories();
-  todosStore.loadTodos();
-});
-
-function clearError() {
-  todosStore.errorMessage = '';
-}
-
-
 </script>
 
 <style>

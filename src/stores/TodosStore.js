@@ -1,5 +1,17 @@
 import { defineStore } from 'pinia'
+
 const apiUrl = process.env.VUE_APP_API_URL;
+
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+};
+
 export const useTodosStore = defineStore('todos', {
   state: () => ({
     todos: [],
@@ -82,10 +94,7 @@ export const useTodosStore = defineStore('todos', {
 
         const response = await fetch(`${apiUrl}todos/create`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
+          headers: getAuthHeaders(),
           body: JSON.stringify(todo)
         });
 
@@ -135,10 +144,7 @@ export const useTodosStore = defineStore('todos', {
 
         const response = await fetch(`${apiUrl}todos/toggle-completion/${id}`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
+          headers: getAuthHeaders()
         });
 
         const data = await response.json();
@@ -164,10 +170,7 @@ export const useTodosStore = defineStore('todos', {
       try {
         const response = await fetch(`${apiUrl}todos/${todoId}`, {
           method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
+          headers: getAuthHeaders()
         });
 
         if (!response.ok) {
@@ -193,9 +196,7 @@ export const useTodosStore = defineStore('todos', {
 
         const response = await fetch(`${apiUrl}todos`, {
           method: 'GET',
-          headers: {
-            'Accept': 'application/json'
-          }
+          headers: getAuthHeaders()
         });
 
         if (!response.ok) {
@@ -216,9 +217,7 @@ export const useTodosStore = defineStore('todos', {
       try {
         const response = await fetch(`${apiUrl}categories`, {
           method: 'GET',
-          headers: {
-            'Accept': 'application/json'
-          }
+          headers: getAuthHeaders()
         });
 
         if (!response.ok) {
