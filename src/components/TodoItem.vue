@@ -15,12 +15,8 @@
                             </span>
                         </div>
                         <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-primary" @click="editTask(task.id)" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" @click="deleteTask(task.id)" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <delete-button :task="task"></delete-button>
+                            <edit-button :task="task"></edit-button>
                         </div>
                     </div>
                     <h5 class="todo-text mb-2">{{task.name}}</h5>
@@ -44,6 +40,8 @@
 
 <script setup>
 import { defineProps } from 'vue';
+import EditButton from './EditButton.vue';
+import DeleteButton from './DeleteButton.vue';
 import { useTodosStore } from '@/stores/TodosStore';
 
 const todosStore = useTodosStore();
@@ -86,17 +84,6 @@ function formatDate(dateString) {
 
 function toggleComplete(taskId) {
     todosStore.toggleTodoCompletion(taskId)
-}
-
-function editTask(taskId) {
-  // TODO: Implement edit functionality with modal
-  alert('Edit feature coming soon! Task ID: ' + taskId)
-}
-
-function deleteTask(taskId) {
-  if (confirm('Are you sure you want to delete this task?')) {
-    todosStore.deleteTodo(taskId)
-  }
 }
 </script>
 

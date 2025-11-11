@@ -168,7 +168,7 @@ export const useTodosStore = defineStore('todos', {
     },
     async deleteTodo(todoId) {
       try {
-        const response = await fetch(`${apiUrl}todos/${todoId}`, {
+        const response = await fetch(`${apiUrl}todos/delete/${todoId}`, {
           method: 'DELETE',
           headers: getAuthHeaders()
         });
@@ -183,6 +183,59 @@ export const useTodosStore = defineStore('todos', {
       } catch (error) {
         this.errorMessage = error.message || 'Failed to delete task';
         return false;
+      }
+    },
+    async updateTodo(todoId, todo) {
+      try {
+        this.loading = true;
+        this.errorMessage = '';
+
+        const response = await fetch(`${apiUrl}todos/update/${todoId}`, {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(todo)
+        });
+
+        const data = await response.json();
+
+        if (data.errors) {
+          this.errors = data.errors;
+          this.errorMessage = 'Failed to update task. Please check all fields.';
+          return false;
+        }
+        console.log('Response data:', data);
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to update task');
+        }
+
+        // Handle different response structures
+        const updatedTodo = data.todo || data;
+        console.log('Updated todo:', updatedTodo);
+        console.log('TodoId type:', typeof todoId, todoId);
+        console.log('Current todos IDs:', this.todos.map(t => ({ id: t.id, type: typeof t.id })));
+
+        // Convert todoId to number for comparison
+        const numericTodoId = typeof todoId === 'string' ? Number(todoId) : todoId;
+
+        const updatedTodos = this.todos.map(t => {
+          const numericTaskId = typeof t.id === 'string' ? Number(t.id) : t.id;
+          if (numericTaskId === numericTodoId) {
+            console.log('✓ Updating task ID:', t.id, 'with new data:', updatedTodo);
+            return updatedTodo;
+          }
+          return t;
+        });
+
+        // Force reactivity by replacing the entire array
+        this.todos = [...updatedTodos];
+        console.log('✓ Todos array updated, new length:', this.todos.length);
+        this.errors = [];
+        return true;
+      } catch (error) {
+        this.errorMessage = error.message || 'Network error. Please try again.';
+        return false;
+      } finally {
+        this.loading = false;
       }
     },
     resetFilters() {

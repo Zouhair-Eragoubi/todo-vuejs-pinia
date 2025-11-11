@@ -64,7 +64,7 @@
         <div class="text-center">
           <p class="auth-link">
             Don't have an account?
-            <router-link to="/register" class="link-primary">Sign Up</router-link>
+            <router-link :to="{ name: 'register' }" class="link-primary">Sign Up</router-link>
           </p>
         </div>
       </form>
@@ -92,7 +92,7 @@ const handleLogin = async () => {
   });
 
   if (success) {
-    router.push('/');
+    router.push({ name: 'home' });
   }
 };
 
