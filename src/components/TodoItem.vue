@@ -11,7 +11,7 @@
                                 <i class="fas fa-flag me-1"></i>{{task.priority.toUpperCase()}}
                             </span>
                             <span class="category-badge" style="background: #e9ecef; color: #495057;">
-                                <i class="fas fa-folder me-1"></i>{{task.category_id}}
+                                <i class="fas fa-folder me-1"></i>{{task.category_name}}
                             </span>
                         </div>
                         <div class="btn-group btn-group-sm">
